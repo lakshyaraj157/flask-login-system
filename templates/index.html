@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock title %}
+
+{% block body %}
+    <div class="container my-3">
+        <p id="message"></p>
+        <h2>Register for an account</h2>
+        <form id="registerForm">
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <input type="email" class="form-control" name="email" id="email" aria-describedby="emailHelp" placeholder="Enter email">
+              <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+              <label for="password1">Password</label>
+              <input type="password" class="form-control" name="password1" id="password1" placeholder="Password">
+            </div>
+            <div class="form-group">
+              <label for="password2">Confirm Password</label>
+              <input type="password" class="form-control" name="password2" id="password2" placeholder="Confirm Password">
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" id="submitBtn">Submit</button>
+        </form>
+    </div>
+{% endblock body %}
+
+{% block js %}
+    <script>
+      {% if session["user"] %}
+      document.addEventListener("load", () => {
+        window.location = "/welcome";
+      })
+      {% else %}
+      let submitBtn = document.getElementById("submitBtn");
+      let message = document.getElementById("message");
+      let registerForm = document.forms["registerForm"];
+
+      submitBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        let formData = new FormData();
+        formData.append("email", registerForm["email"].value);
+        formData.append("password1", registerForm["password1"].value);
+        formData.append("password2", registerForm["password2"].value);
+
+        fetch('/handlesignup', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status == "error"){
+            message.setAttribute("class", "alert alert-danger");
+            message.innerHTML = "<strong>Error!</strong> ";
+          }
+          if (data.status == "success"){
+            message.setAttribute("class", "alert alert-success");
+            message.innerHTML = "<strong>Success!</strong> ";
+            document.getElementById("registerForm").reset();
+            setTimeout(() => {
+              window.location = "/login";
+            }, 2000);
+          }
+          message.innerHTML += data.message;
+          setTimeout(() => {
+            message.setAttribute("class", "");
+            message.removeAttribute("class");
+            message.innerHTML = "";
+          }, 2000);
+        })
+      })
+      {% endif %}
+    </script>
+{% endblock js %}

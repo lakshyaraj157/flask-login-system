@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock title %}
+
+{% block body %}
+    <div class="container my-3">
+        <p id="message"></p>
+        <h2>Login into your account</h2>
+        <form id="loginForm">
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <input type="email" class="form-control" name="email" id="email" aria-describedby="emailHelp" placeholder="Enter email">
+              <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" class="form-control" name="password" id="password" placeholder="Password">
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" id="submitBtn">Submit</button>
+        </form>
+    </div>
+{% endblock body %}
+
+{% block js %}
+  <script>
+    {% if session["user"] %}
+    document.addEventListener("load", () => {
+      window.location = "/welcome";
+    })
+    {% else %}
+    let submitBtn = document.getElementById("submitBtn");
+    let message = document.getElementById("message");
+    let loginForm = document.forms["loginForm"];
+
+    submitBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      let formData = new FormData();
+      formData.append("email", loginForm["email"].value);
+      formData.append("password", loginForm["password"].value);
+
+      fetch('/handlelogin', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status == "error"){
+          message.setAttribute("class", "alert alert-danger");
+          message.innerHTML = "<strong>Error!</strong> ";
+        }
+        if (data.status == "success"){
+          message.setAttribute("class", "alert alert-success");
+          message.innerHTML = "<strong>Success!</strong> ";
+          document.getElementById("loginForm").reset();
+          setTimeout(() => {
+            window.location = "/welcome";
+          }, 2000);
+        }
+        message.innerHTML += data.message;
+        setTimeout(() => {
+          message.setAttribute("class", "");
+          message.removeAttribute("class");
+          message.innerHTML = "";
+        }, 2000);
+      })
+    })
+    {% endif %}
+  </script>
+{% endblock js %}
